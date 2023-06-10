@@ -1,0 +1,38 @@
+id: configure_datadog
+title: Observability
+subtitle: Add monitoring capabilities to your app using Dadatog's tools
+description: If a system falls in the forest, does it make a sound? Yes, yes it does, and so do engineers when their systems fail—and these sounds are strikingly similar! The one thing that’s even worse than dealing with a failing system is not knowing that your system is failing. That’s why in this quest, you’ll add monitoring capabilities to your project by setting up observability tools and alerts.
+summary: Nice job! You should now have a little more confidence in our app and in your ability to fix things when they will (and they will break, we promise ;) ). Now that you see how easy it is to configure a monitoring system, you should make a habit of doing it at the beginning of every production deployment.
+slogan: Gaining visibility through data.
+level: intermediate
+repository: https://github.com/trywilco/Anythink-Market-Public
+resources:
+  - name: k8s
+    config:
+      deploy: true
+      clear:
+        secrets:
+        - datadog-api-key
+
+  - name: user
+    clear:
+      attribute:
+        - newrelic
+steps:
+- open_account
+- configure_apikey
+- configure_agent
+- create_secret
+- push_helm_with_env_var
+duration: 0.75
+skills:
+- backend
+- devops
+- observability
+questDependency: kubernetes
+messages:
+  questFinished:
+    person: devops
+    messages:
+    - text: "You’ve done it! Time to lean back, relax, and look at the metrics. It might take a few minutes for the data to show in New Relic UI. Once the app will be ready, you'll see it in [here](https://one.newrelic.com/?duration=3600000)"
+      delay: 2200

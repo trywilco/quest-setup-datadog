@@ -1,0 +1,55 @@
+id: configure_apikey
+learningObjectives:
+- Creating an API Key in Datadog
+hints:
+- On the Datadog platform, tap the `Go to...`` button on the left sidebar, and search for `API Keys``.
+- On the API Keys screen, click `New Key`. Give it any name.
+- Once a key is generated, click the `Copy` button
+startFlow:
+  do:
+  - actionId: bot_message
+    params:
+      person: devops
+      messages:
+      - text: Next you need to configure a Datadog agent, which requries an API key. You can create a new key from the [API Keys settings page](https://us5.datadoghq.com/organization-settings/api-keys).
+      - text: Generate a new key by tapping the `New Key` button. Give it any name you want and tap the `Create Key` button.
+      - text: Copy the generated key and :instruction[send it to me]
+trigger:
+  type: user_message
+  params:
+    person: devops
+  flowNode:
+    do:
+    - actionId: network_http_request
+      name: verify_key
+      params:
+        url: https://api.us5.datadoghq.com/api/v1/validate
+        headers:
+          Accept: application/json
+          DD-API-KEY: ${userMessageText}
+          
+    if:
+      conditions:
+      - conditionId: is_truthy
+        params:
+          value: ${outputs.verify_key.data?.valid}     
+      then:
+        do:
+        - actionId: user_set_integration_property
+          params:
+            integration: datadog
+            key: api_key
+            value: ${userMessageText}
+        - actionId: bot_message
+          params:
+            person: devops
+            messages:
+            - text: This is indeed a valie API Key. Good job, now let’s move on.
+        - actionId: finish_step
+      else:
+        do:
+        - actionId: bot_message
+          params:
+            person: devops
+            messages:
+            - text: This isn’t a valid API key, please try again.
