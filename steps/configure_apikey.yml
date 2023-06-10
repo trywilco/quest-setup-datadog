@@ -44,7 +44,7 @@ trigger:
           params:
             person: devops
             messages:
-            - text: This is indeed a valie API Key. Good job, now let’s move on.
+            - text: This is indeed a valid API Key.
         - actionId: finish_step
       else:
         do:
