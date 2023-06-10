@@ -21,8 +21,8 @@ resources:
 steps:
 - open_account
 - configure_apikey
-- configure_agent
 - create_secret
+- configure_agent
 - push_helm_with_env_var
 duration: 0.75
 skills:
