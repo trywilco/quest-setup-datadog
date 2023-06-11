@@ -13,11 +13,6 @@ resources:
       clear:
         secrets:
         - datadog-api-key
-
-  - name: user
-    clear:
-      attribute:
-        - newrelic
 steps:
 - open_account
 - configure_apikey
@@ -34,5 +29,5 @@ messages:
   questFinished:
     person: devops
     messages:
-    - text: "You’ve done it! Time to lean back, relax, and look at the metrics. It might take a few minutes for the data to show in New Relic UI. Once the app will be ready, you'll see it in [here](https://one.newrelic.com/?duration=3600000)"
+    - text: "You’ve done it! Time to lean back, relax, and look at the metrics. It might take a few minutes for the data to show in Datadog UI. Once the app will be ready, you'll see it in [here](https://us5.datadoghq.com/apm/home)"
       delay: 2200
