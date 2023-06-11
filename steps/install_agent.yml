@@ -1,33 +1,29 @@
-id: push_helm_with_env_var
+id: install_agent
 learningObjectives:
-- Updating the deployed environment
+- Installing the Datadog agent
 hints:
 - An environment variable can reference a secret by creating an environment variable with the `valueFrom` field that point to a `secretKeyRef` field. More info can be found in this [guide](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables)
 startFlow:
   do:
-    - actionId: bot_message
-      params:
-        person: devops
-        messages:
-          - text: Now we need to set the New Relic environment variables in our backend pods, so the agent can start properly and send data to New Relic.
-            delay: 0
-          - text: We’ll need two variables -
-            delay: 1000
-          - text: "`NEW_RELIC_LICENSE_KEY` - which will store our `INGEST` API key"
-            delay: 1000
-          - text: "`NEW_RELIC_APP_NAME` - the name of the application we want to monitor"
-            delay: 1000
-          - text: We shall introduce these two environment variables by updating the relevant helm chart, in charge of the deployment config.
-            delay: 1000
-          - text: "Go ahead to `charts/templates/anythink-backend-deployment.yaml` and add the variables as follows:"
-            delay: 1000
-          - text: The first, should be a reference to the secret we've just created, `new-relic-license-key`
-            delay: 1000
-          - text: The second, should be a regular environment variable
-            delay: 1000
-          - text: Go ahead and open a PR with these changes.
-            delay: 1000
-
+  - actionId: bot_message
+    params:
+      person: devops
+      messages:
+      - text: We are ready to install the agent on the backend production server.
+      - text: "Go ahead to `charts/templates/anythink-backend-deployment.yaml` and perform the following modifications:"
+      - text: "- Add `DD_API_KEY` environment variable which should be a reference to the secret we've just created."
+      - text: "- Add the agent installation command to the container args."
+      - text: "Add the command before the start backend command:"      
+      - text: |-
+          ``` 
+          spec:
+            containers:
+              - args:
+                  - sh
+                  - -c
+                  - "DD_SITE=\"us5.datadoghq.com\" DD_HOSTNAME=anythink-backend bash -c \"$(curl -L https://s3.amazonaws.com/dd-agent/scripts/install_script_agent7.sh)\" & <existing_start_backend_command>"
+      - text: Notice that the commands are seperated with `&` and not `&&` so that the agent will be installed in the background. Also, make sure to add the `DD_SITE` and `DD_HOST_NAME` variables to the command. Feel free to change the hostname as you wish.
+      - text: Go ahead and open a PR with these changes.
 trigger:
   type: github_pr_lifecycle_status
   flowNode:
@@ -41,7 +37,6 @@ trigger:
               person: devops
               messages:
               - text: Checking now
-                delay: 1000
           - actionId: github_pr_comment
             params:
               person: devops
@@ -54,32 +49,32 @@ trigger:
                 node:
                   fileName: charts/templates/anythink-backend-deployment.yaml
               onFalseParams:
-                pr_reject_message: Did you make sure you've added the environment variables to the relevant deployment yml?
-                pr_reject_message_name: missing_env_var
+                pr_reject_message: Did you make sure you've added the environment variables and the installation command to the relevant deployment yml?
+                pr_reject_message_name: file_not_modified
             - conditionId: github_does_file_contain
               equals: true
               params:
-                regex: NEW_RELIC_LICENSE_KEY
+                regex: DD_API_KEY
                 fileName: charts/templates/anythink-backend-deployment.yaml
               onFalseParams:
-                pr_reject_message: It looks like you the environment variable `NEW_RELIC_LICENSE_KEY` is missing in your deployment yaml
-                pr_reject_message_name: missing_license_key_env_var
+                pr_reject_message: It looks like you the environment variable `DD_API_KEY` is missing in your deployment yaml
+                pr_reject_message_name: missing_api_key_env_var
             - conditionId: github_does_file_contain
               equals: true
               params:
                 regex: secretKeyRef
                 fileName: charts/templates/anythink-backend-deployment.yaml
               onFalseParams:
-                pr_reject_message: Did you make sure the `NEW_RELIC_LICENSE_KEY` environment variable is referencing a key named `new-relic-license-key`
+                pr_reject_message: Did you make sure the `DD_API_KEY` environment variable is referencing a key named `datadog-api-key`
                 pr_reject_message_name: missing_secret_reference
             - conditionId: github_does_file_contain
               equals: true
               params:
-                regex: NEW_RELIC_APP_NAME
+                regex: "install_script_agent7"
                 fileName: charts/templates/anythink-backend-deployment.yaml
               onFalseParams:
-                pr_reject_message: It looks like you the environment variable `NEW_RELIC_APP_NAME` is missing in your deployment yaml
-                pr_reject_message_name: missing_app_name_env_var
+                pr_reject_message: It looks like the agent installation command is missing in your deployment yaml
+                pr_reject_message_name: missing_agent_installation
             then:
               do:
               - actionId: bot_message
@@ -87,7 +82,6 @@ trigger:
                   person: devops
                   messages:
                   - text: Looking good! You can merge the PR now.
-                    delay: 1000
               - actionId: github_pr_approve
                 params:
                   person: devops
@@ -99,7 +93,6 @@ trigger:
                   person: devops
                   messages:
                   - text: ${pr_reject_message}
-                    delay: 1000
               - actionId: github_pr_reject
                 params:
                   person: devops
@@ -112,6 +105,5 @@ trigger:
             params:
               person: devops
               messages:
-                - text: Great, and in a few minutes from now, your app will be soon deployed and monitored!
-                  delay: 1000
-
+                - text: Great, your app will be soon deployed and the agent will start monitoring your host! It might take up to ten minutes and you could see your host appear in the [hosts dashboard](https://us5.datadoghq.com/dashboard/lists/preset/2)
+          - actionId: finish_step

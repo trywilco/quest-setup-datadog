@@ -22,7 +22,7 @@ steps:
 - open_account
 - configure_apikey
 - create_secret
-- configure_agent
+- install_agent
 - push_helm_with_env_var
 duration: 0.75
 skills:
