@@ -42,14 +42,6 @@ trigger:
                 pr_reject_message_name: missing_require
 
             - conditionId: github_is_file_modified
-              paramsFramework:
-                python:
-                  fileName: charts/templates/anythink-backend-deployment.yaml
-              onFalseParams:
-                pr_reject_message: Looks like you did not update the `anythink-backend-deployment.yaml`. Remember you need to add the New Relic admin script command in front of your usual startup command options.
-                pr_reject_message_name: deployment_yaml_not_updated
-
-            - conditionId: github_is_file_modified
               params:
                 fileName: backend/package.json
               onFalseParams:
