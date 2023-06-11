@@ -23,7 +23,7 @@ steps:
 - configure_apikey
 - create_secret
 - install_agent
-- push_helm_with_env_var
+- setup_apm
 duration: 0.75
 skills:
 - backend

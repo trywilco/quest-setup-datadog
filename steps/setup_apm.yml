@@ -1,0 +1,94 @@
+id: setup_apm
+learningObjectives:
+- Setting up monitoring 
+hints:
+- Make sure all relevant files were added to the PR
+startFlow:
+  do:
+  - actionId: bot_message
+    params:
+      person: devops
+      messages:
+      - text: The last thing we need is to setup Application Performance Monitoring (APM) which gives deep visibility into our application.
+      - text: "Perform the following steps in order to setup the Node.js tracer:"
+      - text: "- install the Datadog tracing library `dd-trace`. Use **`yarn`** and not `npm`."
+      - text: "- Add the following code in the beginning of `app.js`:\n```\nrequire('dd-trace').init();\n```"
+      - text: When you're done, please :instrunction[open a PR].
+trigger:
+  type: github_pr_lifecycle_status
+  flowNode:
+    switch:
+      key: ${eventType}
+      cases:
+        github_pr_opened:
+          do:
+          - actionId: bot_message
+            params:
+              person: devops
+              messages:
+              - text: Checking now
+          - actionId: github_pr_comment
+            params:
+              person: devops
+              message: Checking now.
+        github_pr_workflow_complete_success:
+          if:
+            conditions:
+            - conditionId: github_is_file_modified
+              params:
+                fileName: backend/app.js
+              onFalseParams:
+                pr_reject_message: Did you make sure you added the `require` statement to the main app file?
+                pr_reject_message_name: missing_require
+
+            - conditionId: github_is_file_modified
+              paramsFramework:
+                python:
+                  fileName: charts/templates/anythink-backend-deployment.yaml
+              onFalseParams:
+                pr_reject_message: Looks like you did not update the `anythink-backend-deployment.yaml`. Remember you need to add the New Relic admin script command in front of your usual startup command options.
+                pr_reject_message_name: deployment_yaml_not_updated
+
+            - conditionId: github_is_file_modified
+              params:
+                fileName: backend/package.json
+              onFalseParams:
+                pr_reject_message: Did you add the Datatog tracing package to the dependency list? Make sure to add it to the **backend** project.
+                pr_reject_message_name: missing_dependency
+
+            - conditionId: github_is_file_added
+              equals: false
+              params:
+                fileName: backend/package-lock.json                  
+              onFalseParams:
+                pr_reject_message: I see you have both `package-lock.json` and `yarn.lock`. This can cause issues in the build. Let’s stick with just yarn for now, and remove the `package-lock.json`.
+                pr_reject_message_name: npm_lock_added
+
+            then:
+              do:
+              - actionId: bot_message
+                params:
+                  person: devops
+                  messages:
+                  - text: Looking good! You can merge the PR now.
+              - actionId: github_pr_approve
+                params:
+                  person: devops
+                  message: Looking good! You can merge the PR now.
+
+            else:
+              do:
+              - actionId: bot_message
+                params:
+                  person: devops
+                  messages:
+                  - text: ${pr_reject_message}
+              - actionId: github_pr_reject
+                params:
+                  person: devops
+                  message: ${pr_reject_message}
+                  messageName: ${pr_reject_message_name}
+
+        github_pr_merged:
+          do:
+          - actionId: finish_step
